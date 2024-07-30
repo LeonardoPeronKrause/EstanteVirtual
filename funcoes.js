@@ -63,9 +63,13 @@ const editarEstante = function() {
         if (index >= 0 && index < livros.length) {
             rl.question('Qual o novo Nome do livro que você deseja editar? (Se deixar em branco o nome não irá alterar): ', function(novoNome) {
                 rl.question('Qual o novo segmento do livro que você deseja editar? (Se deixar em branco o nome não irá alterar): ', function(novoSegmento) {
-                    livros[index].livro = novoNome;
-                    livros[index].segmento = novoSegmento;
-                    console.log(`O livro foi atualizado com sucesso!`);
+                    if (novoNome.trim() !== '') {
+                        livros[index].nome = novoNome;
+                    }
+                    if (novoSegmento.trim() !== '') {
+                        livros[index].segmento = novoSegmento;
+                    }
+                    console.log('O livro foi atualizado com sucesso!');
                     exibirMenu();
                 });
             });
