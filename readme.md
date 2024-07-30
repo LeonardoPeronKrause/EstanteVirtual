@@ -17,3 +17,13 @@ O EstanteVirtual é um sistema CRUD para gerenciar seus livros de forma eficient
   - Ficção
   - (Outras categorias conforme necessário)
 
+## Tecnologias Utilizadas
+- **Frontend**: HTML, CSS, JavaScript, [Frameworks/Libraries]
+- **Backend**: [Linguagem/Framework]
+- **Banco de Dados**: [Tipo de Banco de Dados]
+- **Outras Ferramentas**: [Ferramentas Adicionais]
+
+## Instalação
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/seu-usuario/booktracker.git
