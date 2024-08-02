@@ -1,20 +1,24 @@
 const db = require('./dataBase');
-
 const readline = require('readline');
-
 const fs = require('fs');
-const e = require('express');
 
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
-const livros = [];
-
 const iniciar = function() {
     console.log('Bem vindo à EstanteVirtual, o seu espaço para gerenciamento de livros!\n');
-    exibirMenu();
+
+    // Conecta o bando de dados e, se conectar com sucesso, exiba o menu
+    db.connect((err) => {
+        if (err) {
+            console.log('Erro ao conectar com o banco de dados:', err.message);
+            return;
+        }
+        console.log('Conectado ao banco de dados MySQL.');
+        exibirMenu();
+    });    
 };
 
 const exibirMenu = function() {
@@ -60,40 +64,67 @@ const cadastrarLivro = function() {
 };
 
 const editarEstante = function() {
-    rl.question('Qual o ID do livro qie você deseja editar?', function(id) {
-        rl.question('Qual o novo nome do livro? (Se deixar em branco não irá alterar)', function(novoNome) {
-            rl.question('Qual o novo segmento do livro? (Se deixar em branco não irá alterar)', function(novoSegmento) {
-                const updates = [];
-                const params = [];
+    const query = 'SELECT * FROM livros';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.log('Erro ao busca livros: ', err.message);
+            return exibirMenu();
+        }
 
-                if (novoNome.trim() !== '') {
-                    updates.push('nome = ?');
-                    params.push(novoNome);
-                }
+        if (results.length === 0) {
+            console.log('Nenhum livro cadastrado na Estante Virtual!');
+            return exibirMenu();
+        }
 
-                if (novoSegmento.trim() !== '') {
-                    updates.push('segmento = ?');
-                    params.push(novoSegmento);
-                }
+        console.log('Livros disponíveis para edição:');
+        results.forEach((livro, index) => {
+            console.log(`${index + 1}. '${livro.nome}' (${livro.segmento})`);
+        });
 
-                if (updates.length > 0) {
-                    params.push(id);
-                    const query = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
-                    db.query(query, params, (err, results) => {
-                        if (err) {
-                            console.log('Erro ao atualizar o livro: ', err.message);
-                        } else {
-                            console.log('O livro foi atualizado com sucesso!');
+        rl.question('Qual o número do livro que você deseja editar?', function(numero) {
+            const index = parseInt(numero) - 1;
+
+            if (index >= 0 && index < results.length) {
+                const livroSelecionado = results[index];
+            
+                rl.question('Qual o novo nome do livro? (Se deixar em branco não irá alterar)', function(novoNome) {
+                    rl.question('Qual o novo segmento do livro? (Se deixar em branco não irá alterar)', function(novoSegmento) {
+                        const updates = [];
+                        const params = [];
+        
+                        if (novoNome.trim() !== '') {
+                            updates.push('nome = ?');
+                            params.push(novoNome);
                         }
-                        exibirMenu();
+        
+                        if (novoSegmento.trim() !== '') {
+                            updates.push('segmento = ?');
+                            params.push(novoSegmento);
+                        }
+        
+                        if (updates.length > 0) {
+                            params.push(livroSelecionado.id);
+                            const updateQuery = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
+                            db.query(updateQuery, params, (err) => {
+                                if (err) {
+                                    console.log('Erro ao atualizar o livro: ', err.message);
+                                } else {
+                                    console.log('O livro foi atualizado com sucesso!');
+                                }
+                                exibirMenu();
+                            });
+                        } else {
+                            console.log('Nenhuma atualização realizada.');
+                            exibirMenu();
+                        }
                     });
-                } else {
-                    console.log('Nenhuma atualização realizada.');
-                    exibirMenu();
-                }
-            })
-        })
-    })
+                });
+            } else {
+                console.log('Número inválido. Tente novamente.');
+                exibirMenu();
+            }
+        });
+    });
 };
 
 const verEstante = function() {
@@ -101,7 +132,7 @@ const verEstante = function() {
     db.query(query, (err, results) => {
         if (err) {
             console.log('Erro ao buscar livros: ', err.message);
-        } else if (livros.length === 0) {
+        } else if (results.length === 0) {
             console.log('Nenhum livro cadastrdo na Estante Virtual!');
         } else {
             console.log('Livros Cadastrados: \n');
@@ -136,7 +167,7 @@ const excluirLivro = function() {
         rl.question('Qual o número do livro que você deseja excluir? ', function(numero) {
             const index = parseInt(numero) - 1;
             if (index >= 0 && index < results.length) {
-                rl.question(`Você tem certeza que deseja excluir o livro ${livros[index].nome} da Estante Virtual? [use = S para sim/N para não]: `, function(confirmacao) {
+                rl.question(`Você tem certeza que deseja excluir o livro ${results[index].nome} da Estante Virtual? [use = S para sim/N para não]: `, function(confirmacao) {
                     if (confirmacao.toUpperCase() === 'S') {
                         const deleteQuery = 'DELETE FROM livros WHERE id = ?';
                         db.query(deleteQuery, [results[index].id], (err) => {
@@ -161,23 +192,30 @@ const excluirLivro = function() {
 };
 
 const fazerBackup = function() {
-    if (livros.length === 0) {
-        console.log('Nenhum livro cadastrado na Estante Virtual!');
-        return exibirMenu();
-    }
-
-    const dadosJson = JSON.stringify(livros, null, 2);
-    const caminhoArquivo = 'backup_EstanteVirtual.json';
-    fs.writeFile(caminhoArquivo, dadosJson, (err) => {
+    const query = 'SELECT * FROM livros';
+    db.query(query, (err, results) => {
         if (err) {
-            console.log('Erro ao fazer o backup!', err);
-            exibirMenu();
-        } else {
-            console.log(`Backup realizado com sucesso! Dados salvos em ${caminhoArquivo}`);
+            console.log('Erro ao buscar livros: ', err.message);
+            return exibirMenu();
         }
-        exibirMenu();
-    });
+    
+        if (results.length === 0) {
+            console.log('Nenhum livro cadastrado na Estante Virtual!');
+            return exibirMenu();
+        }
 
+        const dadosJson = JSON.stringify(results, null, 2);
+        const caminhoArquivo = 'backup_EstanteVirtual.json';
+        fs.writeFile(caminhoArquivo, dadosJson, (err) => {
+            if (err) {
+                console.log('Erro ao fazer o backup!', err);
+                exibirMenu();
+            } else {
+                console.log(`Backup realizado com sucesso! Dados salvos em ${caminhoArquivo}`);
+            }
+            exibirMenu();
+        });
+    });
 };
 
 const sair = function() {
