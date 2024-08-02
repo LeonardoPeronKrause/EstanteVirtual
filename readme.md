@@ -19,5 +19,5 @@ O EstanteVirtual é um sistema CRUD para gerenciar seus livros de forma eficient
 
 ## Tecnologias Utilizadas
 
-- **Backend**: Javascript, Node e Express
+- **Backend**: Javascript, Node.js 
 - **Banco de Dados**: MySQL
