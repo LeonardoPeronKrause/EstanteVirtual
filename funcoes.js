@@ -1,6 +1,9 @@
+const db = require('./dataBase');
+
 const readline = require('readline');
 
 const fs = require('fs');
+const e = require('express');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -38,93 +41,122 @@ const exibirMenu = function() {
 const cadastrarLivro = function() {
     rl.question('Qual o nome do livro que você deseja cadastrar? ', function(nome) {
         rl.question('Qual é o segmento do livro? ', function(segmento) {
-            const livro = {
-                nome,
-                segmento
-            };
-            livros.push(livro);
-            console.log(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso!`);
-            exibirMenu();
-        })
+            if (typeof nome !== 'string' || typeof segmento !== 'string') {
+                console.error('Nome e Segmento devem ser strings.');
+                return exibirMenu();
+            }
+
+            const query = 'INSERT INTO livros (nome, segmento) VALUES (?, ?)';
+            db.query(query, [nome, segmento], (err, results) => {
+                if (err) {
+                    console.log('Erro ao cadastrar o livro: ', err.message);
+                } else {
+                    console.log(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso!`);
+                }
+                exibirMenu();
+            });
+        });
     });
 };
 
 const editarEstante = function() {
-    if (livros.length === 0) {
-        console.log('Nenhum livro cadastrado na Estante Virtual!');
-        return exibirMenu();
-    }
+    rl.question('Qual o ID do livro qie você deseja editar?', function(id) {
+        rl.question('Qual o novo nome do livro? (Se deixar em branco não irá alterar)', function(novoNome) {
+            rl.question('Qual o novo segmento do livro? (Se deixar em branco não irá alterar)', function(novoSegmento) {
+                const updates = [];
+                const params = [];
 
-    console.log('Livros cadastrados: ');
-    livros.forEach((livro, index) => {
-        console.log(`${index + 1}. ${livro.nome} (${livro.segmento})`);
-    });
+                if (novoNome.trim() !== '') {
+                    updates.push('nome = ?');
+                    params.push(novoNome);
+                }
 
-    rl.question('Qual o número do livro que você deseja editar? ', function(numero) {
-        const index = parseInt(numero) - 1;
-        if (index >= 0 && index < livros.length) {
-            rl.question('Qual o novo Nome do livro que você deseja editar? (Se deixar em branco o nome não irá alterar): ', function(novoNome) {
-                rl.question('Qual o novo segmento do livro que você deseja editar? (Se deixar em branco o nome não irá alterar): ', function(novoSegmento) {
-                    if (novoNome.trim() !== '') {
-                        livros[index].nome = novoNome;
-                    }
-                    if (novoSegmento.trim() !== '') {
-                        livros[index].segmento = novoSegmento;
-                    }
-                    console.log('O livro foi atualizado com sucesso!');
+                if (novoSegmento.trim() !== '') {
+                    updates.push('segmento = ?');
+                    params.push(novoSegmento);
+                }
+
+                if (updates.length > 0) {
+                    params.push(id);
+                    const query = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
+                    db.query(query, params, (err, results) => {
+                        if (err) {
+                            console.log('Erro ao atualizar o livro: ', err.message);
+                        } else {
+                            console.log('O livro foi atualizado com sucesso!');
+                        }
+                        exibirMenu();
+                    });
+                } else {
+                    console.log('Nenhuma atualização realizada.');
                     exibirMenu();
-                });
-            });
-        } else {
-            console.log('Número inválido!');
-            exibirMenu();
-        }
-    });
+                }
+            })
+        })
+    })
 };
 
 const verEstante = function() {
-    if (livros.length === 0) {
-        console.log('Nenhum livro cadastrdo na Estante Virtual!');
-    } else {
-        console.log('Livros Cadastrados: \n');
-        livros.forEach((livro, index) => {
-            console.log(`${index + 1}. '${livro.nome}' do segmento: ${livro.segmento}. `);
-        });
-    }
-    exibirMenu();
+    const query = 'SELECT * FROM livros';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.log('Erro ao buscar livros: ', err.message);
+        } else if (livros.length === 0) {
+            console.log('Nenhum livro cadastrdo na Estante Virtual!');
+        } else {
+            console.log('Livros Cadastrados: \n');
+            results.forEach((livro, index) => {
+                console.log(`${index + 1}. '${livro.nome}' do segmento: ${livro.segmento}. `);
+            });
+        }
+        exibirMenu();
+    });
 };
 
 const excluirLivro = function() {
-    if (livros.length === 0) {
-        console.log('Nenhum livro cadastrado na Estante Virtual!');
-        return exibirMenu();
-    }
-
-    console.log('Livros cadastrados: ');
-    livros.forEach((livro, index) => {
-        console.log(`${index + 1}. ${livro.nome} (${livro.segmento})`);
-    });
-
-    rl.question('Qual o número do livro que você deseja excluir? ', function(numero) {
-        const index = parseInt(numero) - 1;
-        if (index >= 0 && index < livros.length) {
-            rl.question(`Você tem certeza que deseja excluir o livro ${livros[index].nome} da Estante Virtual? [use = S para sim/N para não]: `, function(confirmacao) {
-                if (confirmacao.toUpperCase() === 'S') {
-                    console.log(`O livro ${livros[index].nome} foi excluído com sucesso!`);
-                    livros.splice(index, 1);
-                    exibirMenu();
-                } else if (confirmacao.toUpperCase() === 'N') {
-                    console.log('Livro não excluído!');
-                    exibirMenu();
-                } else if (confirmacao.toUpperCase() !== 'S' && confirmacao.toUpperCase() !== 'N') {
-                    console.log('Palavra inválida, por favor use = S para sim ou N para não. ');
-                    exibirMenu();
-                }
-            });
-        } else {
-            console.log('Número inválido');
-            exibirMenu();
+    const query = 'SELECT * FROM livros';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.log('Erro ao buscar livros: ', err.message);
+            return exibirMenu();
         }
+
+        if (results.length === 0) {
+            console.log('Nenhum livro cadastrado na Estante Virtual!');
+            return exibirMenu();
+        }
+
+        console.log('Livros cadastrados: ');
+        results.forEach((livro, index) => {
+        console.log(`${index + 1}. ${livro.nome} (${livro.segmento})`);
+        });
+
+    
+
+        rl.question('Qual o número do livro que você deseja excluir? ', function(numero) {
+            const index = parseInt(numero) - 1;
+            if (index >= 0 && index < results.length) {
+                rl.question(`Você tem certeza que deseja excluir o livro ${livros[index].nome} da Estante Virtual? [use = S para sim/N para não]: `, function(confirmacao) {
+                    if (confirmacao.toUpperCase() === 'S') {
+                        const deleteQuery = 'DELETE FROM livros WHERE id = ?';
+                        db.query(deleteQuery, [results[index].id], (err) => {
+                            if (err) {
+                                console.log('Erro ao excluir livro: ', err.message);
+                            } else {
+                                console.log(`O livro ${results[index].nome} foi excluído com sucesso!`);
+                            }
+                            exibirMenu();
+                        });    
+                    } else {
+                        console.log('Livro não excluído!');
+                        exibirMenu();
+                    }
+                });
+            } else {
+                console.log('Número inválido.');
+                exibirMenu();
+            }
+        });
     });
 };
 
