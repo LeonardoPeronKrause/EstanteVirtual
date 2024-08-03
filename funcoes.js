@@ -45,19 +45,24 @@ const exibirMenu = function() {
 const cadastrarLivro = function() {
     rl.question('Qual o nome do livro que você deseja cadastrar? ', function(nome) {
         rl.question('Qual é o segmento do livro? ', function(segmento) {
-            if (!nome || !segmento) {
-                console.error('Nome e Segmento são obrigatórios.');
-                return exibirMenu();
-            }
-
-            const query = 'INSERT INTO livros (nome, segmento) VALUES (?, ?)';
-            db.query(query, [nome, segmento], (err) => {
-                if (err) {
-                    console.log('Erro ao cadastrar o livro: ', err.message);
-                } else {
-                    console.log(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso!`);
+            rl.question('Qual o preço do livro?', function(preco) {
+                if (!nome || !segmento || !preco) {
+                    console.error('Nome, Segmento e Preço são obrigatórios.');
+                    return exibirMenu();
                 }
-                exibirMenu();
+
+                // Substitui a vírgula por ponto para garantir o formato correto
+                preco = preco.replace(',', '.');
+    
+                const query = 'INSERT INTO livros (nome, segmento, preco) VALUES (?, ?, ?)';
+                db.query(query, [nome, segmento, parseFloat(preco)], (err) => {
+                    if (err) {
+                        console.log('Erro ao cadastrar dados do livro: ', err.message);
+                    } else {
+                        console.log(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso! E seu preço é de ${preco} reais.`);
+                    }
+                    exibirMenu();
+                });
             });
         });
     });
