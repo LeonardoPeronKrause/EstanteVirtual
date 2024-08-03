@@ -45,7 +45,7 @@ const exibirMenu = function() {
 const cadastrarLivro = function() {
     rl.question('Qual o nome do livro que você deseja cadastrar? ', function(nome) {
         rl.question('Qual é o segmento do livro? ', function(segmento) {
-            rl.question('Qual o preço do livro?', function(preco) {
+            rl.question('Qual o preço do livro? ', function(preco) {
                 if (!nome || !segmento || !preco) {
                     console.error('Nome, Segmento e Preço são obrigatórios.');
                     return exibirMenu();
@@ -86,42 +86,50 @@ const editarEstante = function() {
             console.log(`${index + 1}. '${livro.nome}' (${livro.segmento})`);
         });
 
-        rl.question('Qual o número do livro que você deseja editar?', function(numero) {
+        rl.question('Qual o número do livro que você deseja editar? ', function(numero) {
             const index = parseInt(numero) - 1;
 
             if (index >= 0 && index < results.length) {
                 const livroSelecionado = results[index];
             
-                rl.question('Qual o novo nome do livro? (Se deixar em branco não irá alterar)', function(novoNome) {
-                    rl.question('Qual o novo segmento do livro? (Se deixar em branco não irá alterar)', function(novoSegmento) {
-                        const updates = [];
-                        const params = [];
-        
-                        if (novoNome.trim() !== '') {
-                            updates.push('nome = ?');
-                            params.push(novoNome);
-                        }
-        
-                        if (novoSegmento.trim() !== '') {
-                            updates.push('segmento = ?');
-                            params.push(novoSegmento);
-                        }
-        
-                        if (updates.length > 0) {
-                            params.push(livroSelecionado.id);
-                            const updateQuery = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
-                            db.query(updateQuery, params, (err) => {
-                                if (err) {
-                                    console.log('Erro ao atualizar o livro: ', err.message);
-                                } else {
-                                    console.log('O livro foi atualizado com sucesso!');
-                                }
+                rl.question('Qual o novo nome do livro? (Se deixar em branco não irá alterar) ', function(novoNome) {
+                    rl.question('Qual o novo segmento do livro? (Se deixar em branco não irá alterar) ', function(novoSegmento) {
+                        rl.question('Qual o novo preço do livro? (Se deixar em branco não irá alterar) ', function(novoPreco) {
+                            const updates = [];
+                            const params = [];
+            
+                            if (novoNome.trim() !== '') {
+                                updates.push('nome = ?');
+                                params.push(novoNome);
+                            }
+            
+                            if (novoSegmento.trim() !== '') {
+                                updates.push('segmento = ?');
+                                params.push(novoSegmento);
+                            }
+
+                            if (novoPreco.trim() !== '') {
+                                novoPreco = parseFloat(novoPreco.replace(',', '.'));
+                                updates.push('preco = ?');
+                                params.push(novoPreco);
+                            }
+            
+                            if (updates.length > 0) {
+                                params.push(livroSelecionado.id);
+                                const updateQuery = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
+                                db.query(updateQuery, params, (err) => {
+                                    if (err) {
+                                        console.log('Erro ao atualizar o livro: ', err.message);
+                                    } else {
+                                        console.log('O livro foi atualizado com sucesso!');
+                                    }
+                                    exibirMenu();
+                                });
+                            } else {
+                                console.log('Nenhuma atualização realizada.');
                                 exibirMenu();
-                            });
-                        } else {
-                            console.log('Nenhuma atualização realizada.');
-                            exibirMenu();
-                        }
+                            }
+                        });
                     });
                 });
             } else {
@@ -142,7 +150,7 @@ const verEstante = function() {
         } else {
             console.log('Livros Cadastrados: \n');
             results.forEach((livro, index) => {
-                console.log(`${index + 1}. '${livro.nome}' do segmento: ${livro.segmento}. `);
+                console.log(`${index + 1}. '${livro.nome}' do segmento: ${livro.segmento} e preço: ${livro.preco}`);
             });
         }
         exibirMenu();
@@ -164,10 +172,8 @@ const excluirLivro = function() {
 
         console.log('Livros cadastrados: ');
         results.forEach((livro, index) => {
-        console.log(`${index + 1}. ${livro.nome} (${livro.segmento})`);
+        console.log(`${index + 1}. ${livro.nome} (${livro.segmento}) (${livro.preco})`);
         });
-
-    
 
         rl.question('Qual o número do livro que você deseja excluir? ', function(numero) {
             const index = parseInt(numero) - 1;
