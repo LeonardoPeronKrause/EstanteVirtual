@@ -45,13 +45,13 @@ const exibirMenu = function() {
 const cadastrarLivro = function() {
     rl.question('Qual o nome do livro que você deseja cadastrar? ', function(nome) {
         rl.question('Qual é o segmento do livro? ', function(segmento) {
-            if (typeof nome !== 'string' || typeof segmento !== 'string') {
-                console.error('Nome e Segmento devem ser strings.');
+            if (!nome || !segmento) {
+                console.error('Nome e Segmento são obrigatórios.');
                 return exibirMenu();
             }
 
             const query = 'INSERT INTO livros (nome, segmento) VALUES (?, ?)';
-            db.query(query, [nome, segmento], (err, results) => {
+            db.query(query, [nome, segmento], (err) => {
                 if (err) {
                     console.log('Erro ao cadastrar o livro: ', err.message);
                 } else {
