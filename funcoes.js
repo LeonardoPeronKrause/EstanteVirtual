@@ -2,11 +2,13 @@ const db = require('./dataBase');
 const readline = require('readline');
 const fs = require('fs');
 
+// Cria uma interface p leitura p interação com user no terminal
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
+// Função iniciar
 const iniciar = function() {
     console.log('Bem vindo à EstanteVirtual, o seu espaço para gerenciamento de livros!\n');
 
@@ -21,6 +23,7 @@ const iniciar = function() {
     });    
 };
 
+// Função Menu p escolha do user
 const exibirMenu = function() {
     rl.question('\n 1. Cadastrar Livro:\n 2. Editar Estante:\n 3. Ver Estante:\n 4. Excluir Livro da Estante:\n 5. Fazer Backup:\n 0. Sair:\n\nQual opção você deseja? ', function(opcao) {
         if (opcao === '1') {
@@ -42,6 +45,7 @@ const exibirMenu = function() {
     });
 };
 
+// Função cadastrar um novo livro
 const cadastrarLivro = function() {
     rl.question('Qual o nome do livro que você deseja cadastrar? ', function(nome) {
         rl.question('Qual é o segmento do livro? ', function(segmento) {
@@ -68,6 +72,7 @@ const cadastrarLivro = function() {
     });
 };
 
+// Função p editar livro existente
 const editarEstante = function() {
     const query = 'SELECT * FROM livros';
     db.query(query, (err, results) => {
@@ -140,6 +145,7 @@ const editarEstante = function() {
     });
 };
 
+// Função p ver os livros cadastrados
 const verEstante = function() {
     const query = 'SELECT * FROM livros';
     db.query(query, (err, results) => {
@@ -157,6 +163,7 @@ const verEstante = function() {
     });
 };
 
+// Função p excluir um livro existente
 const excluirLivro = function() {
     const query = 'SELECT * FROM livros';
     db.query(query, (err, results) => {
@@ -202,6 +209,7 @@ const excluirLivro = function() {
     });
 };
 
+// Função p fzr o backup dos livros cadastrados
 const fazerBackup = function() {
     const query = 'SELECT * FROM livros';
     db.query(query, (err, results) => {
@@ -229,11 +237,13 @@ const fazerBackup = function() {
     });
 };
 
+// Função p sair da aplicação
 const sair = function() {
     console.log('Tchau, até logo!\nSaindo...');
     rl.close();
 };
 
+// Exporta as funções p serem usadas em outros módulos
 module.exports = {
     iniciar,
     exibirMenu,
