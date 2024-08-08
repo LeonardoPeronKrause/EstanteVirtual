@@ -1,0 +1,15 @@
+{
+  "name": "gerenciamento-de-livros",
+  "version": "1.0.0",
+  "description": "O EstanteVirtual é um sistema CRUD para gerenciar seus livros de forma eficiente.",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "mysql": "^2.18.1"
+  }
+}
