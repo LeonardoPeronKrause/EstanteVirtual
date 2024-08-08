@@ -90,7 +90,7 @@ const editarEstante = function() {
 
         console.log('Livros disponíveis para edição:');
         results.forEach((livro, index) => {
-            console.log(`${index + 1}. '${livro.nome}' (${livro.segmento})`);
+            console.log(`${index + 1}. '${livro.nome}' (${livro.segmento}) - Lido: ${livro.lido}`);
         });
 
         rl.question('Qual o número do livro que você deseja editar? ', function(numero) {
@@ -102,44 +102,52 @@ const editarEstante = function() {
                 rl.question('Qual o novo nome do livro? (Se deixar em branco não irá alterar) ', function(novoNome) {
                     rl.question('Qual o novo segmento do livro? (Se deixar em branco não irá alterar) ', function(novoSegmento) {
                         rl.question('Qual o novo preço do livro? (Se deixar em branco não irá alterar) ', function(novoPreco) {
-                            const updates = [];
-                            const params = [];
-            
-                            if (novoNome.trim() !== '') {
-                                updates.push('nome = ?');
-                                params.push(novoNome);
-                            }
-            
-                            if (novoSegmento.trim() !== '') {
-                                updates.push('segmento = ?');
-                                params.push(novoSegmento);
-                            }
+                            rl.question('Você já leu o livro? [use = S para sim/N para não]: ', function(novoLido) {
 
-                            if (novoPreco.trim() !== '') {
-                                novoPreco = parseFloat(novoPreco.replace(',', '.'));
-                                if (isNaN(novoPreco)) {
-                                    console.error(chalk.red('Preço inválido!'));
-                                    return exibirMenu();
-                                }
-                                updates.push('preco = ?');
-                                params.push(novoPreco);
-                            }
+                                const updates = [];
+                                const params = [];
             
-                            if (updates.length > 0) {
-                                params.push(livroSelecionado.id);
-                                const updateQuery = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
-                                db.query(updateQuery, params, (err) => {
-                                    if (err) {
-                                        console.log(chalk.red('Erro ao atualizar o livro: '), err.message);
-                                    } else {
-                                        console.log(chalk.green('O livro foi atualizado com sucesso!'));
+                                if (novoNome.trim() !== '') {
+                                    updates.push('nome = ?');
+                                    params.push(novoNome);
+                                }
+                
+                                if (novoSegmento.trim() !== '') {
+                                    updates.push('segmento = ?');
+                                    params.push(novoSegmento);
+                                }
+
+                                if (novoPreco.trim() !== '') {
+                                    novoPreco = parseFloat(novoPreco.replace(',', '.'));
+                                    if (isNaN(novoPreco)) {
+                                        console.error(chalk.red('Preço inválido!'));
+                                        return exibirMenu();
                                     }
+                                    updates.push('preco = ?');
+                                    params.push(novoPreco);
+                                }
+
+                                if (novoLido.trim() !== '') {
+                                    updates.push('lido = ?');
+                                    params.push(novoLido.toUpperCase() === 'S' ? 'Sim' : 'Não');
+                                }
+                
+                                if (updates.length > 0) {
+                                    params.push(livroSelecionado.id);
+                                    const updateQuery = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
+                                    db.query(updateQuery, params, (err) => {
+                                        if (err) {
+                                            console.log(chalk.red('Erro ao atualizar o livro: '), err.message);
+                                        } else {
+                                            console.log(chalk.green('O livro foi atualizado com sucesso!'));
+                                        }
+                                        exibirMenu();
+                                    });
+                                } else {
+                                    console.log(chalk.yellow('Nenhuma atualização realizada.'));
                                     exibirMenu();
-                                });
-                            } else {
-                                console.log(chalk.yellow('Nenhuma atualização realizada.'));
-                                exibirMenu();
-                            }
+                                }
+                            });
                         });
                     });
                 });
@@ -162,7 +170,7 @@ const verEstante = function() {
         } else {
             console.log('Livros Cadastrados: \n');
             results.forEach((livro, index) => {
-                console.log(`${index + 1}. '${chalk.blue(livro.nome)}' do segmento: ${livro.segmento} e preço: ${livro.preco}`);
+                console.log(`${index + 1}. '${chalk.blue(livro.nome)}' do segmento: ${livro.segmento} e preço: ${livro.preco} - Lido: ${livro.lido}`);
             });
         }
         exibirMenu();
