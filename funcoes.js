@@ -52,22 +52,26 @@ const cadastrarLivro = function() {
     rl.question('Qual o nome do livro que você deseja cadastrar? ', function(nome) {
         rl.question('Qual é o segmento do livro? ', function(segmento) {
             rl.question('Qual o preço do livro? ', function(preco) {
-                if (!nome || !segmento || !preco) {
-                    console.error(chalk.red('Nome, Segmento e Preço são obrigatórios.'));
-                    return exibirMenu();
-                }
-
-                // Substitui a vírgula por ponto para garantir o formato correto
-                preco = preco.replace(',', '.');
-    
-                const query = 'INSERT INTO livros (nome, segmento, preco) VALUES (?, ?, ?)';
-                db.query(query, [nome, segmento, parseFloat(preco)], (err) => {
-                    if (err) {
-                        console.log(chalk.red('Erro ao cadastrar dados do livro: '), err.message);
-                    } else {
-                        console.log(chalk.green(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso! E seu preço é de ${preco} reais.`));
+                rl.question('Você já leu este livro? [use = S para sim/N para não]: ', function(lido) {
+                    // Verifica se todos os campos foram preenchidos
+                    if (!nome || !segmento || !preco || !lido) {
+                        console.error(chalk.red('Os campos: Nome, Segmento, Preço e se você já leu o livro são obrigatórios.'));
+                        return exibirMenu();
                     }
-                    exibirMenu();
+
+                    // Substitui a vírgula por ponto para garantir o formato correto
+                    preco = preco.replace(',', '.');
+        
+                    // Query para inserir dados na tabela
+                    const query = 'INSERT INTO livros (nome, segmento, preco, lido) VALUES (?, ?, ?, ?)';
+                    db.query(query, [nome, segmento, parseFloat(preco), lido.toUpperCase() === 'S' ? 'Sim' : 'Não'], (err) => {
+                        if (err) {
+                            console.log(chalk.red('Erro ao cadastrar dados do livro: '), err.message);
+                        } else {
+                            console.log(chalk.green(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso! E seu preço é de ${preco} reais. Lido: ${lido.toUpperCase() === 'S' ? 'Sim' : 'Não'}`));
+                        }
+                        exibirMenu();
+                    });
                 });
             });
         });
