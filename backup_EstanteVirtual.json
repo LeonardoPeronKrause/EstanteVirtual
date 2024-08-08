@@ -1,0 +1,107 @@
+[
+  {
+    "id": 1,
+    "nome": "Pense e Enriqueça",
+    "segmento": "Finanças",
+    "preco": 44.9,
+    "lido": "Nâo"
+  },
+  {
+    "id": 2,
+    "nome": "Como fazer amigos e influenciar pessoas",
+    "segmento": "Autoajuda",
+    "preco": 45,
+    "lido": "Nâo"
+  },
+  {
+    "id": 4,
+    "nome": "Mindset",
+    "segmento": "Autoajuda",
+    "preco": 36,
+    "lido": "Nâo"
+  },
+  {
+    "id": 5,
+    "nome": "Pai Rico, Pai Pobre",
+    "segmento": "Finanças",
+    "preco": 62,
+    "lido": "Nâo"
+  },
+  {
+    "id": 7,
+    "nome": "O Mais Importante Para o Investidor",
+    "segmento": "Finanças",
+    "preco": 47,
+    "lido": "Sim"
+  },
+  {
+    "id": 8,
+    "nome": "Os Três Porquinhos",
+    "segmento": "Infantil",
+    "preco": 10,
+    "lido": "Sim"
+  },
+  {
+    "id": 12,
+    "nome": "O Principe",
+    "segmento": "Politica",
+    "preco": 19.9,
+    "lido": "Nâo"
+  },
+  {
+    "id": 13,
+    "nome": "Bíblia Sagrada",
+    "segmento": "Religião",
+    "preco": 21.9,
+    "lido": "Sim"
+  },
+  {
+    "id": 15,
+    "nome": "Hábitos Atômicos",
+    "segmento": "Autoajuda",
+    "preco": 46.3,
+    "lido": "Nâo"
+  },
+  {
+    "id": 16,
+    "nome": "As Aventuras de PI",
+    "segmento": "Ficção",
+    "preco": 24.9,
+    "lido": "Sim"
+  },
+  {
+    "id": 17,
+    "nome": "O Homem Mais Rico da Babilônia",
+    "segmento": "Finanças",
+    "preco": 17.9,
+    "lido": "Sim"
+  },
+  {
+    "id": 18,
+    "nome": "O Investidor Inteligente",
+    "segmento": "Finanças",
+    "preco": 52.35,
+    "lido": "Nâo"
+  },
+  {
+    "id": 19,
+    "nome": "Harry Potter",
+    "segmento": "Ficção",
+    "preco": 35.29,
+    "lido": "Nâo"
+  },
+  {
+    "id": 21,
+    "nome": "O cão e a raposa",
+    "segmento": "Infantil",
+    "preco": 24.5,
+    "lido": "Sim"
+  },
+  {
+    "id": 22,
+    "nome": "Código Limpo",
+    "segmento": "Programação",
+    "preco": 72.3,
+    "lido": "Nâo"
+  }
+]
