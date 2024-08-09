@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const db = require('./dataBase');
 const readline = require('readline');
 const fs = require('fs');
@@ -11,15 +12,15 @@ const rl = readline.createInterface({
 
 // Função iniciar
 const iniciar = function() {
-    console.log('Bem vindo à EstanteVirtual, o seu espaço para gerenciamento de livros!\n');
+    console.log(chalk.blue('Bem vindo à EstanteVirtual, o seu espaço para gerenciamento de livros!\n'));
 
     // Conecta o bando de dados e, se conectar com sucesso, exiba o menu
     db.connect((err) => {
         if (err) {
-            console.log('Erro ao conectar com o banco de dados:', err.message);
+            console.log(chalk.red('Erro ao conectar com o banco de dados:'), err.message);
             return;
         }
-        console.log('Conectado ao banco de dados MySQL.');
+        console.log(chalk.green('Conectado ao banco de dados MySQL.'));
         exibirMenu();
     });    
 };
@@ -40,7 +41,7 @@ const exibirMenu = function() {
         } else if (opcao === '0') {
             sair();
         } else {
-            console.log('Você digitou uma opção inválida!\n Tenta novamente...');
+            console.log(chalk.red('Você digitou uma opção inválida!\n Tenta novamente...'));
             exibirMenu();
         }
     });
@@ -48,29 +49,70 @@ const exibirMenu = function() {
 
 // Função cadastrar um novo livro
 const cadastrarLivro = function() {
+    rl.question('Você já leu o livro que deseja cadastrar? [use = S para sim/N para não]: ', function(resposta) {
+        if (resposta.toUpperCase() === 'S') {
+            cadastrarLivroLido();
+        } else if (resposta.toUpperCase() === 'N') {
+            cadastrarLivroNaoLido();
+        } else {
+            console.log('Resposta inválida! Por favor, tente novamente.');
+            return exibirMenu();
+        }
+    });
+}
+
+const cadastrarLivroLido = function () {
     rl.question('Qual o nome do livro que você deseja cadastrar? ', function(nome) {
         rl.question('Qual é o segmento do livro? ', function(segmento) {
             rl.question('Qual o preço do livro? ', function(preco) {
-                rl.question('Você já leu este livro? [use = S para sim/N para não]: ', function(lido) {
-                    // Verifica se todos os campos foram preenchidos
-                    if (!nome || !segmento || !preco || !lido) {
-                        console.error('Os campos: Nome, Segmento, Preço e se você já leu o livro são obrigatórios.');
-                        return exibirMenu();
-                    }
+                if (!nome || !segmento || !preco) {
+                    console.error(chalk.red('Nome, Segmento e Preço são obrigatórios.'));
+                    return exibirMenu();
+                }
 
-                    // Substitui a vírgula por ponto para garantir o formato correto
-                    preco = preco.replace(',', '.');
-        
-                    // Query para inserir dados na tabela
-                    const query = 'INSERT INTO livros (nome, segmento, preco, lido) VALUES (?, ?, ?, ?)';
-                    db.query(query, [nome, segmento, parseFloat(preco), lido.toUpperCase() === 'S' ? 'Sim' : 'Não'], (err) => {
-                        if (err) {
-                            console.log('Erro ao cadastrar dados do livro: ', err.message);
-                        } else {
-                            console.log(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso! E seu preço é de ${preco} reais. Lido: ${lido.toUpperCase() === 'S' ? 'Sim' : 'Não'}`);
-                        }
-                        exibirMenu();
-                    });
+                // Substitui a vírgula por ponto para garantir o formato correto
+                preco = preco.replace(',', '.');
+
+                // Define o valor da colunaa 'lido' como verdadeiro p livros lidos
+                const lido = true;
+    
+                const query = 'INSERT INTO livros (nome, segmento, preco, lido) VALUES (?, ?, ?, ?)';
+                db.query(query, [nome, segmento, parseFloat(preco), lido], (err) => {
+                    if (err) {
+                        console.log(chalk.red('Erro ao cadastrar dados do livro: '), err.message);
+                    } else {
+                        console.log(chalk.green(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso! E seu preço é de ${preco} reais. Livro Lido? ${lido ? 'Sim' : 'Não'}`));
+                    }
+                    exibirMenu();
+                });
+            });
+        });
+    });
+};
+
+const cadastrarLivroNaoLido = function () {
+    rl.question('Qual o nome do livro que você deseja cadastrar? ', function(nome) {
+        rl.question('Qual é o segmento do livro? ', function(segmento) {
+            rl.question('Qual o preço do livro? ', function(preco) {
+                if (!nome || !segmento || !preco) {
+                    console.error(chalk.red('Nome, Segmento e Preço são obrigatórios.'));
+                    return exibirMenu();
+                }
+
+                // Substitui a vírgula por ponto para garantir o formato correto
+                preco = preco.replace(',', '.');
+
+                // Define o valor da colunaa 'lido' como falso p livros não lidos
+                const lido = false;
+    
+                const query = 'INSERT INTO livros (nome, segmento, preco, lido) VALUES (?, ?, ?, ?)';
+                db.query(query, [nome, segmento, parseFloat(preco), lido], (err) => {
+                    if (err) {
+                        console.log(chalk.red('Erro ao cadastrar dados do livro: '), err.message);
+                    } else {
+                        console.log(chalk.green(`O livro ${nome} do segmento ${segmento}, foi cadastrado com sucesso! E seu preço é de ${preco} reais. Livro lido? ${lido ? 'Sim' : 'Não'}`));
+                    }
+                    exibirMenu();
                 });
             });
         });
@@ -82,18 +124,18 @@ const editarEstante = function() {
     const query = 'SELECT * FROM livros';
     db.query(query, (err, results) => {
         if (err) {
-            console.log('Erro ao busca livros: ', err.message);
+            console.log(chalk.red('Erro ao busca livros: '), err.message);
             return exibirMenu();
         }
 
         if (results.length === 0) {
-            console.log('Nenhum livro cadastrado na Estante Virtual!');
+            console.log(chalk.yellow('Nenhum livro cadastrado na Estante Virtual!'));
             return exibirMenu();
         }
 
         console.log('Livros disponíveis para edição:');
         results.forEach((livro, index) => {
-            console.log(`${index + 1}. '${livro.nome}' (${livro.segmento}) - Lido: ${livro.lido}`);
+            console.log(`${index + 1}. '${livro.nome}' (${livro.segmento})`);
         });
 
         rl.question('Qual o número do livro que você deseja editar? ', function(numero) {
@@ -105,57 +147,49 @@ const editarEstante = function() {
                 rl.question('Qual o novo nome do livro? (Se deixar em branco não irá alterar) ', function(novoNome) {
                     rl.question('Qual o novo segmento do livro? (Se deixar em branco não irá alterar) ', function(novoSegmento) {
                         rl.question('Qual o novo preço do livro? (Se deixar em branco não irá alterar) ', function(novoPreco) {
-                            rl.question('Você já leu o livro? [use = S para sim/N para não]: ', function(novoLido) {
-
-                                const updates = [];
-                                const params = [];
+                            const updates = [];
+                            const params = [];
             
-                                if (novoNome.trim() !== '') {
-                                    updates.push('nome = ?');
-                                    params.push(novoNome);
-                                }
-                
-                                if (novoSegmento.trim() !== '') {
-                                    updates.push('segmento = ?');
-                                    params.push(novoSegmento);
-                                }
+                            if (novoNome.trim() !== '') {
+                                updates.push('nome = ?');
+                                params.push(novoNome);
+                            }
+            
+                            if (novoSegmento.trim() !== '') {
+                                updates.push('segmento = ?');
+                                params.push(novoSegmento);
+                            }
 
-                                if (novoPreco.trim() !== '') {
-                                    novoPreco = parseFloat(novoPreco.replace(',', '.'));
-                                    if (isNaN(novoPreco)) {
-                                        console.error('Preço inválido!');
-                                        return exibirMenu();
+                            if (novoPreco.trim() !== '') {
+                                novoPreco = parseFloat(novoPreco.replace(',', '.'));
+                                if (isNaN(novoPreco)) {
+                                    console.error(chalk.red('Preço inválido!'));
+                                    return exibirMenu();
+                                }
+                                updates.push('preco = ?');
+                                params.push(novoPreco);
+                            }
+            
+                            if (updates.length > 0) {
+                                params.push(livroSelecionado.id);
+                                const updateQuery = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
+                                db.query(updateQuery, params, (err) => {
+                                    if (err) {
+                                        console.log(chalk.red('Erro ao atualizar o livro: '), err.message);
+                                    } else {
+                                        console.log(chalk.green('O livro foi atualizado com sucesso!'));
                                     }
-                                    updates.push('preco = ?');
-                                    params.push(novoPreco);
-                                }
-
-                                if (novoLido.trim() !== '') {
-                                    updates.push('lido = ?');
-                                    params.push(novoLido.toUpperCase() === 'S' ? 'Sim' : 'Não');
-                                }
-                
-                                if (updates.length > 0) {
-                                    params.push(livroSelecionado.id);
-                                    const updateQuery = `UPDATE livros SET ${updates.join(', ')} WHERE id = ?`;
-                                    db.query(updateQuery, params, (err) => {
-                                        if (err) {
-                                            console.log('Erro ao atualizar o livro: ', err.message);
-                                        } else {
-                                            console.log('O livro foi atualizado com sucesso!');
-                                        }
-                                        exibirMenu();
-                                    });
-                                } else {
-                                    console.log('Nenhuma atualização realizada.');
                                     exibirMenu();
-                                }
-                            });
+                                });
+                            } else {
+                                console.log(chalk.yellow('Nenhuma atualização realizada.'));
+                                exibirMenu();
+                            }
                         });
                     });
                 });
             } else {
-                console.log('Número inválido. Tente novamente.');
+                console.log(chalk.red('Número inválido. Tente novamente.'));
                 exibirMenu();
             }
         });
@@ -167,13 +201,13 @@ const verEstante = function() {
     const query = 'SELECT * FROM livros';
     db.query(query, (err, results) => {
         if (err) {
-            console.log('Erro ao buscar livros: ', err.message);
+            console.log(chalk.red('Erro ao buscar livros: '), err.message);
         } else if (results.length === 0) {
-            console.log('Nenhum livro cadastrdo na Estante Virtual!');
+            console.log(chalk.yellow('Nenhum livro cadastrdo na Estante Virtual!'));
         } else {
             console.log('Livros Cadastrados: \n');
             results.forEach((livro, index) => {
-                console.log(`${index + 1}. '${livro.nome}' do segmento: ${livro.segmento} e preço: ${livro.preco} - Lido: ${livro.lido}`);
+                console.log(`${index + 1}. '${chalk.blue(livro.nome)}' do segmento: ${livro.segmento} e preço: ${livro.preco}`);
             });
         }
         exibirMenu();
@@ -185,44 +219,41 @@ const excluirLivro = function() {
     const query = 'SELECT * FROM livros';
     db.query(query, (err, results) => {
         if (err) {
-            console.log('Erro ao buscar livros: ', err.message);
+            console.log(chalk.red('Erro ao buscar livros: '), err.message);
             return exibirMenu();
         }
 
         if (results.length === 0) {
-            console.log('Nenhum livro cadastrado na Estante Virtual!');
+            console.log(chalk.yellow('Nenhum livro cadastrado na Estante Virtual!'));
             return exibirMenu();
         }
 
         console.log('Livros cadastrados: ');
         results.forEach((livro, index) => {
-        console.log(`${index + 1}. ${livro.nome} (${livro.segmento}) (${livro.preco}) (${livro.lido})`);
+        console.log(`${index + 1}. ${livro.nome} (${livro.segmento}) (${livro.preco})`);
         });
 
         rl.question('Qual o número do livro que você deseja excluir? ', function(numero) {
             const index = parseInt(numero) - 1;
             if (index >= 0 && index < results.length) {
-                rl.question(`Você tem certeza que deseja excluir o livro ${results[index].nome} da Estante Virtual? [use = S para sim/N para não]: `, function(confirmacao) {
+                rl.question(chalk.yellow(`Você tem certeza que deseja excluir o livro ${results[index].nome} da Estante Virtual? [use = S para sim/N para não]: `), function(confirmacao) {
                     if (confirmacao.toUpperCase() === 'S') {
                         const deleteQuery = 'DELETE FROM livros WHERE id = ?';
                         db.query(deleteQuery, [results[index].id], (err) => {
                             if (err) {
-                                console.log('Erro ao excluir livro: ', err.message);
+                                console.log(chalk.red('Erro ao excluir livro: '), err.message);
                             } else {
-                                console.log(`O livro ${results[index].nome} foi excluído com sucesso!`);
+                                console.log(chalk.green(`O livro ${results[index].nome} foi excluído com sucesso!`));
                             }
                             exibirMenu();
                         });    
-                    } else if (confirmacao.toUpperCase() === 'N') {
-                        console.log('Livro não excluído!');
-                        exibirMenu();
                     } else {
-                        console.log('Você digitou algo diferente de "S" para sim ou "N" para não');
+                        console.log(chalk.yellow('Livro não excluído!'));
                         exibirMenu();
                     }
                 });
             } else {
-                console.log('Número inválido.');
+                console.log(chalk.red('Número inválido.'));
                 exibirMenu();
             }
         });
@@ -234,12 +265,12 @@ const fazerBackup = function() {
     const query = 'SELECT * FROM livros';
     db.query(query, (err, results) => {
         if (err) {
-            console.log('Erro ao buscar livros: ', err.message);
+            console.log(chalk.red('Erro ao buscar livros: '), err.message);
             return exibirMenu();
         }
     
         if (results.length === 0) {
-            console.log('Nenhum livro cadastrado na Estante Virtual!');
+            console.log(chalk.yellow('Nenhum livro cadastrado na Estante Virtual!'));
             return exibirMenu();
         }
 
@@ -247,10 +278,10 @@ const fazerBackup = function() {
         const caminhoArquivo = 'backup_EstanteVirtual.json';
         fs.writeFile(caminhoArquivo, dadosJson, (err) => {
             if (err) {
-                console.log('Erro ao fazer o backup!', err);
+                console.log(chalk.red('Erro ao fazer o backup!'), err);
                 exibirMenu();
             } else {
-                console.log(`Backup realizado com sucesso! Dados salvos em ${caminhoArquivo}`);
+                console.log(chalk.green(`Backup realizado com sucesso! Dados salvos em ${caminhoArquivo}`));
             }
             exibirMenu();
         });
@@ -259,15 +290,8 @@ const fazerBackup = function() {
 
 // Função p sair da aplicação
 const sair = function() {
-    db.end((err) => {
-        if (err) {
-            console.log('Erro ao fechar a conexão com o banco de dados: ', er.message);
-        } else {
-            console.log('Banco de dados desconectado!');
-        }        
-        console.log('Tchau, até logo!\nSaindo...');
-        rl.close();
-    });
+    console.log(chalk.blue('Tchau, até logo!\nSaindo...'));
+    rl.close();
 };
 
 // Exporta as funções p serem usadas em outros módulos
